@@ -85,11 +85,11 @@ public class DataSeeder implements CommandLineRunner {
                 transactionRepository.count());
     }
 
-    private static User user(String email, String fullName) {
+    private static User user(String email, String username) {
         return User.builder()
                 .email(email)
                 .passwordHash(PLACEHOLDER_HASH)
-                .fullName(fullName)
+                .username(username)
                 .build();
     }
 
@@ -105,8 +105,8 @@ public class DataSeeder implements CommandLineRunner {
         return Budget.builder()
                 .user(user)
                 .category(category)
-                .budgetMonth(month)
-                .budgetYear(year)
+                .month(month)
+                .year(year)
                 .amount(amount)
                 .build();
     }
@@ -129,7 +129,7 @@ public class DataSeeder implements CommandLineRunner {
                 .category(category)
                 .amount(amount)
                 .transactionDate(LocalDate.parse(date))
-                .note(note)
+                .description(note)
                 .build();
     }
 }
