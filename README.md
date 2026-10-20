@@ -376,11 +376,12 @@ Phạm vi chia sẻ tài chính giữa nhiều tài khoản trong một gia đì
 
 ---
 
+
 # 6. THIẾT KẾ DATABASE DỰ KIẾN
 
 ## 6.1. Users
 
-| Trường | Kiểu dữ liệu dự kiến |
+| Trường | Kiểu dữ liệu |
 |---|---|
 | id | BIGINT |
 | username | VARCHAR |
@@ -390,47 +391,128 @@ Phạm vi chia sẻ tài chính giữa nhiều tài khoản trong một gia đì
 
 ## 6.2. Categories
 
-| Trường | Kiểu dữ liệu dự kiến |
+| Trường | Kiểu dữ liệu |
 |---|---|
 | id | BIGINT |
 | user_id | BIGINT |
 | name | VARCHAR |
 | type | VARCHAR |
 | created_at | DATETIME |
+
+**Ghi chú:**
+- `type` nhận giá trị `INCOME` hoặc `EXPENSE`.
+- Loại giao dịch được xác định thông qua danh mục.
+- Mỗi danh mục thuộc về một người dùng.
 
 ## 6.3. Transactions
 
-| Trường | Kiểu dữ liệu dự kiến |
+| Trường | Kiểu dữ liệu |
 |---|---|
 | id | BIGINT |
 | user_id | BIGINT |
 | category_id | BIGINT |
-| type | VARCHAR |
-| amount | DECIMAL |
+| amount | BIGINT |
 | description | TEXT |
 | transaction_date | DATE |
 | created_at | DATETIME |
+| updated_at | DATETIME |
+
+**Ghi chú:**
+- `amount` sử dụng BIGINT, lưu số tiền nguyên theo VND.
+- `amount` phải lớn hơn 0.
+- Bỏ trường `type` để tránh dư thừa dữ liệu.
+- Loại giao dịch được lấy từ `Categories.type`.
+- `created_at` lưu thời điểm tạo giao dịch.
+- `updated_at` lưu thời điểm cập nhật gần nhất.
 
 ## 6.4. Budgets
 
-| Trường | Kiểu dữ liệu dự kiến |
+| Trường | Kiểu dữ liệu |
 |---|---|
 | id | BIGINT |
 | user_id | BIGINT |
 | category_id | BIGINT |
-| amount | DECIMAL |
+| amount | BIGINT |
 | month | INT |
 | year | INT |
+| created_at | DATETIME |
+| updated_at | DATETIME |
+
+**Ghi chú:**
+- `amount` sử dụng BIGINT, đơn vị VND.
+- `amount` phải lớn hơn 0.
+- `category_id` có thể NULL nếu áp dụng ngân sách tổng.
+- `created_at` lưu thời điểm tạo ngân sách.
+- `updated_at` lưu thời điểm chỉnh sửa gần nhất.
 
 ## 6.5. SavingsGoals
 
-| Trường | Kiểu dữ liệu dự kiến |
+| Trường | Kiểu dữ liệu |
 |---|---|
 | id | BIGINT |
 | user_id | BIGINT |
 | name | VARCHAR |
-| target_amount | DECIMAL |
-| current_amount | DECIMAL |
+| target_amount | BIGINT |
+| current_amount | BIGINT |
 | deadline | DATE |
+| created_at | DATETIME |
+| updated_at | DATETIME |
 
-**Lưu ý:** Đây là thiết kế logic ban
+**Ghi chú:**
+- `target_amount` là số tiền mục tiêu, phải lớn hơn 0.
+- `current_amount` là số tiền đã tiết kiệm, không được âm.
+- Các trường tiền sử dụng BIGINT, đơn vị VND.
+- `created_at` lưu thời điểm tạo mục tiêu.
+- `updated_at` lưu thời điểm cập nhật mục tiêu.
+
+## 6.6. Quy tắc thiết kế Database
+
+### Quy tắc 1: Kiểu dữ liệu tiền tệ
+
+- Tất cả trường tiền tệ sử dụng BIGINT.
+- Đơn vị tiền tệ mặc định là VND.
+- Backend Java sử dụng kiểu Long.
+- Không sử dụng FLOAT hoặc DOUBLE để lưu tiền.
+
+### Quy tắc 2: Loại giao dịch
+
+- Không sử dụng trường `type` trong Transactions.
+- Chỉ lưu `type` tại Categories.
+- Categories.type gồm:
+  - INCOME: Thu nhập.
+  - EXPENSE: Chi tiêu.
+- Khi cần xác định loại giao dịch, JOIN Transactions với Categories.
+
+### Quy tắc 3: Quản lý thời gian
+
+- `created_at`: Thời điểm tạo bản ghi.
+- `updated_at`: Thời điểm cập nhật gần nhất.
+- Các trường thời gian sử dụng DATETIME.
+- `created_at` không thay đổi sau khi tạo.
+- `updated_at` thay đổi mỗi khi cập nhật bản ghi.
+
+### Quy tắc 4: Ràng buộc dữ liệu
+
+- Mỗi giao dịch thuộc về một người dùng.
+- Mỗi giao dịch thuộc về một danh mục.
+- Mỗi ngân sách thuộc về một người dùng.
+- Mỗi mục tiêu tiết kiệm thuộc về một người dùng.
+- Các khóa ngoại phải bảo đảm tính toàn vẹn dữ liệu.
+- Người dùng không được truy cập hoặc chỉnh sửa dữ liệu của tài khoản khác.
+
+### Quy tắc 5: Tính toán tài chính
+
+**Tổng thu nhập:**
+- SUM(amount) của các giao dịch có Categories.type = INCOME.
+
+**Tổng chi tiêu:**
+- SUM(amount) của các giao dịch có Categories.type = EXPENSE.
+
+**Số dư:**
+- Số dư = Tổng thu nhập - Tổng chi tiêu.
+
+**Ngân sách còn lại:**
+- Ngân sách còn lại = Ngân sách thiết lập - Tổng chi tiêu tương ứng.
+
+**Tiến độ tiết kiệm:**
+- Tiến độ (%) = current_amount / target_amount * 100.
