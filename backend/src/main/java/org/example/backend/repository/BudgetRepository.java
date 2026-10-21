@@ -26,4 +26,7 @@ public interface BudgetRepository extends JpaRepository<Budget, Long> {
     List<Budget> findAllByUser(@Param("userId") Long userId,
                                @Param("month") Integer month,
                                @Param("year") Integer year);
+
+    Optional<Budget> findByUserIdAndCategoryIdAndMonthAndYear(Long userId, Long categoryId,
+                                                              Integer month, Integer year);
 }

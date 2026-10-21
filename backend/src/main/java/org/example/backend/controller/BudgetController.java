@@ -6,6 +6,7 @@ import org.example.backend.model.dto.request.BudgetCreateRequest;
 import org.example.backend.model.dto.request.BudgetUpdateRequest;
 import org.example.backend.model.dto.response.ApiResponse;
 import org.example.backend.model.dto.response.BudgetResponse;
+import org.example.backend.model.dto.response.BudgetStatusResponse;
 import org.example.backend.service.impl.BudgetService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -45,5 +46,17 @@ public class BudgetController {
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         budgetService.delete(id);
         return ResponseEntity.ok(ApiResponse.success("Xóa ngân sách thành công"));
+    }
+
+    @GetMapping("/status")
+    public ResponseEntity<ApiResponse<BudgetStatusResponse>> status(
+            @RequestParam Long categoryId,
+            @RequestParam Integer month,
+            @RequestParam Integer year) {
+        BudgetStatusResponse data = budgetService.getStatus(categoryId, month, year);
+        String message = data.isBudgetSet()
+                ? "Lấy trạng thái ngân sách thành công"
+                : "Chưa thiết lập ngân sách cho danh mục này trong tháng đã chọn";
+        return ResponseEntity.ok(ApiResponse.success(message, data));
     }
 }

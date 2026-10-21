@@ -7,6 +7,7 @@ import org.example.backend.exception.ResourceNotFoundException;
 import org.example.backend.model.dto.request.BudgetCreateRequest;
 import org.example.backend.model.dto.request.BudgetUpdateRequest;
 import org.example.backend.model.dto.response.BudgetResponse;
+import org.example.backend.model.dto.response.BudgetStatusResponse;
 import org.example.backend.model.entity.Budget;
 import org.example.backend.model.entity.Category;
 import org.example.backend.model.entity.User;
@@ -23,10 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -45,8 +43,7 @@ public class BudgetService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
 
-        Category category = categoryRepository.findById(request.getCategoryId())
-                .filter(c -> c.getUser().getId().equals(userId))
+        Category category = categoryRepository.findByIdAndUserId(request.getCategoryId(), userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy danh mục"));
 
         if (category.getType() != CategoryType.EXPENSE) {
@@ -121,6 +118,64 @@ public class BudgetService {
         budgetRepository.delete(findOwned(id, userId));
     }
 
+    @Transactional(readOnly = true)
+    public BudgetStatusResponse getStatus(Long categoryId, Integer month, Integer year) {
+        if (month < 1 || month > 12) {
+            throw new BadRequestException("Tháng phải từ 1 đến 12");
+        }
+        if (year < 2000 || year > 2100) {
+            throw new BadRequestException("Năm không hợp lệ");
+        }
+
+        Long userId = currentUserProvider.getCurrentUserId();
+
+        Category category = categoryRepository.findByIdAndUserId(categoryId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy danh mục"));
+
+        if (category.getType() != CategoryType.EXPENSE) {
+            throw new BadRequestException("Chỉ danh mục chi tiêu mới có ngân sách");
+        }
+
+        YearMonth ym = YearMonth.of(year, month);
+        Long totalSpent = transactionRepository.sumSpent(
+                userId, categoryId, ym.atDay(1), ym.atEndOfMonth());
+
+        Optional<Budget> budgetOpt = budgetRepository
+                .findByUserIdAndCategoryIdAndMonthAndYear(userId, categoryId, month, year);
+
+        // Chưa thiết lập ngân sách: vẫn trả 200, kèm tổng chi thực tế
+        if (budgetOpt.isEmpty()) {
+            return BudgetStatusResponse.builder()
+                    .categoryId(category.getId())
+                    .categoryName(category.getName())
+                    .month(month)
+                    .year(year)
+                    .budgetSet(false)
+                    .budgetAmount(null)
+                    .totalSpent(totalSpent)
+                    .remaining(null)
+                    .exceeded(false)
+                    .exceededAmount(0L)
+                    .build();
+        }
+
+        long limit = budgetOpt.get().getAmount();
+        long diff = totalSpent - limit;
+        boolean exceeded = diff > 0;
+
+        return BudgetStatusResponse.builder()
+                .categoryId(category.getId())
+                .categoryName(category.getName())
+                .month(month)
+                .year(year)
+                .budgetSet(true)
+                .budgetAmount(limit)
+                .totalSpent(totalSpent)
+                .remaining(limit - totalSpent)
+                .exceeded(exceeded)
+                .exceededAmount(exceeded ? diff : 0L)
+                .build();
+    }
     // ---- helpers ----
 
     /** Không thuộc về người dùng hiện tại => coi như không tồn tại (404). */

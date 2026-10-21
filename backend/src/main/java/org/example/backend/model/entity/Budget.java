@@ -1,14 +1,6 @@
 package org.example.backend.model.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -24,7 +16,15 @@ import java.time.LocalDateTime;
  * Mỗi danh mục chỉ có một ngân sách trong mỗi tháng.
  */
 @Entity
-@Table(name = "budgets")
+@Table(
+    name = "budgets",
+    uniqueConstraints = {
+            @UniqueConstraint(
+                    name = "uk_budget_user_category_month_year",
+                    columnNames = {"user_id", "category_id", "budget_month", "budget_year"}
+            )
+    }
+)
 @Getter
 @Setter
 @Builder
