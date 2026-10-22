@@ -1,6 +1,8 @@
 package org.example.backend.repository;
 
 import org.example.backend.model.entity.Transaction;
+import org.example.backend.model.enums.CategoryType;
+import org.example.backend.model.projection.CategoryTotal;
 import org.example.backend.model.projection.SpentByCategoryMonth;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -39,4 +41,30 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     List<SpentByCategoryMonth> sumSpentGrouped(@Param("userId") Long userId,
                                                @Param("from") LocalDate from,
                                                @Param("to") LocalDate to);
+    /** Tổng thu hoặc tổng chi (theo type của danh mục) trong khoảng ngày. */
+    @Query("""
+        select coalesce(sum(t.amount), 0L) from Transaction t
+        where t.user.id = :userId
+          and t.category.type = :type
+          and t.transactionDate between :from and :to
+        """)
+    Long sumByType(@Param("userId") Long userId,
+                   @Param("type") CategoryType type,
+                   @Param("from") LocalDate from,
+                   @Param("to") LocalDate to);
+
+    /** Tổng theo từng danh mục, sắp xếp giảm dần. */
+    @Query("""
+        select c.id as categoryId, c.name as categoryName, sum(t.amount) as total
+        from Transaction t join t.category c
+        where t.user.id = :userId
+          and c.type = :type
+          and t.transactionDate between :from and :to
+        group by c.id, c.name
+        order by sum(t.amount) desc
+        """)
+    List<CategoryTotal> sumByCategory(@Param("userId") Long userId,
+                                      @Param("type") CategoryType type,
+                                      @Param("from") LocalDate from,
+                                      @Param("to") LocalDate to);
 }
