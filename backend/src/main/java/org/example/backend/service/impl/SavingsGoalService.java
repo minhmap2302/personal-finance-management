@@ -3,6 +3,7 @@ package org.example.backend.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.example.backend.exception.ResourceNotFoundException;
 import org.example.backend.model.dto.request.SavingsGoalCreateRequest;
+import org.example.backend.model.dto.request.SavingsGoalDepositRequest;
 import org.example.backend.model.dto.request.SavingsGoalUpdateRequest;
 import org.example.backend.model.dto.response.SavingsGoalResponse;
 import org.example.backend.model.entity.SavingsGoal;
@@ -63,6 +64,17 @@ public class SavingsGoalService {
         return toResponse(savingsGoalRepository.saveAndFlush(goal));
     }
 
+    @Transactional
+    public SavingsGoalResponse deposit(Long id, SavingsGoalDepositRequest request) {
+        Long userId = currentUserProvider.getCurrentUserId();
+
+        SavingsGoal goal = savingsGoalRepository.findByIdAndUserId(id, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy mục tiêu tiết kiệm"));
+
+        goal.setCurrentAmount(goal.getCurrentAmount() + request.getAmount());
+
+        return toResponse(savingsGoalRepository.saveAndFlush(goal));
+    }
     // ---- helpers ----
 
     private SavingsGoalResponse toResponse(SavingsGoal g) {

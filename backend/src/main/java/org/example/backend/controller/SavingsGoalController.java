@@ -3,6 +3,7 @@ package org.example.backend.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.backend.model.dto.request.SavingsGoalCreateRequest;
+import org.example.backend.model.dto.request.SavingsGoalDepositRequest;
 import org.example.backend.model.dto.request.SavingsGoalUpdateRequest;
 import org.example.backend.model.dto.response.ApiResponse;
 import org.example.backend.model.dto.response.SavingsGoalResponse;
@@ -39,5 +40,13 @@ public class SavingsGoalController {
             @Valid @RequestBody SavingsGoalUpdateRequest request) {
         return ResponseEntity.ok(
                 ApiResponse.success("Cập nhật mục tiêu thành công", savingsGoalService.update(id, request)));
+    }
+
+    @PostMapping("/{id}/deposit")
+    public ResponseEntity<ApiResponse<SavingsGoalResponse>> deposit(
+            @PathVariable Long id,
+            @Valid @RequestBody SavingsGoalDepositRequest request) {
+        return ResponseEntity.ok(
+                ApiResponse.success("Nạp tiền vào mục tiêu thành công", savingsGoalService.deposit(id, request)));
     }
 }
