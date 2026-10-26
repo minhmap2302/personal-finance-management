@@ -2,16 +2,6 @@ package org.example.backend.service;
 
 import org.example.backend.exception.ConflictException;
 import org.example.backend.exception.ResourceNotFoundException;
-import org.example.backend.model.dto.request.CategoryCreateRequest;
-import org.example.backend.model.dto.request.CategoryUpdateRequest;
-import org.example.backend.model.dto.response.CategoryResponse;
-import org.example.backend.model.entity.Category;
-import org.example.backend.model.entity.User;
-import org.example.backend.model.enums.CategoryType;
-import org.example.backend.repository.BudgetRepository;
-import org.example.backend.repository.CategoryRepository;
-import org.example.backend.repository.TransactionRepository;
-import org.example.backend.service.impl.CategoryServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

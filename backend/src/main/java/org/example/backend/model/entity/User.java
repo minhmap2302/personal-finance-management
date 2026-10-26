@@ -1,22 +1,29 @@
 package org.example.backend.model.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.example.backend.model.enums.SystemRole;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
+/**
+ * Người dùng hệ thống (bảng users).
+ * Một người dùng có thể tham gia nhiều gia đình thông qua bảng family_members.
+ */
 @Entity
-@Table(name = "users")
+@Table(
+    name = "users",
+    uniqueConstraints = {
+            @UniqueConstraint(name = "uk_user_username", columnNames = {"username"}),
+            @UniqueConstraint(name = "uk_user_email", columnNames = {"email"})
+    }
+)
 @Getter
 @Setter
 @Builder
@@ -28,17 +35,31 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "email", nullable = false, unique = true, length = 255)
+    /** Tên đăng nhập, duy nhất, dùng để tìm kiếm khi mời vào gia đình. */
+    @Column(name = "username", nullable = false, length = 50)
+    private String username;
+
+    @Column(name = "email", nullable = false, length = 100)
     private String email;
 
-    /** Mật khẩu đã băm, không bao giờ lưu mật khẩu gốc. */
-    @Column(name = "password_hash", nullable = false, length = 255)
-    private String passwordHash;
+    /** Mật khẩu đã được mã hóa. */
+    @Column(name = "password", nullable = false)
+    private String password;
 
-    @Column(name = "username", nullable = false, length = 100)
-    private String username;
+    @Column(name = "full_name", length = 100)
+    private String fullName;
+
+    /** Vai trò cấp hệ thống (ADMIN hoặc USER). */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false, length = 20)
+    @Builder.Default
+    private SystemRole role = SystemRole.USER;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
 }

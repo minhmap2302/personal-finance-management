@@ -1,7 +1,5 @@
 package org.example.backend.security.jwt;
 
-import org.example.backend.model.entity.User;
-import org.example.backend.security.principal.CustomUserDetails;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

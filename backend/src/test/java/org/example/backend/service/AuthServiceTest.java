@@ -1,16 +1,6 @@
 package org.example.backend.service;
 
 import org.example.backend.exception.ConflictException;
-import org.example.backend.model.dto.request.LoginRequest;
-import org.example.backend.model.dto.request.RegisterRequest;
-import org.example.backend.model.dto.response.AuthResponse;
-import org.example.backend.model.dto.response.UserResponse;
-import org.example.backend.model.entity.RevokedToken;
-import org.example.backend.model.entity.User;
-import org.example.backend.repository.RevokedTokenRepository;
-import org.example.backend.repository.UserRepository;
-import org.example.backend.security.jwt.JwtService;
-import org.example.backend.service.impl.AuthServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

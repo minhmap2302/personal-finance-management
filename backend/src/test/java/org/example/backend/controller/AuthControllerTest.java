@@ -2,11 +2,6 @@ package org.example.backend.controller;
 
 import org.example.backend.exception.ConflictException;
 import org.example.backend.exception.GlobalExceptionHandler;
-import org.example.backend.model.dto.request.LoginRequest;
-import org.example.backend.model.dto.request.RegisterRequest;
-import org.example.backend.model.dto.response.AuthResponse;
-import org.example.backend.model.dto.response.UserResponse;
-import org.example.backend.service.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

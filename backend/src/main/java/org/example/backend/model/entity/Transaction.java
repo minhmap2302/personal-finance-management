@@ -1,14 +1,6 @@
 package org.example.backend.model.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -21,11 +13,17 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
- * Giao dịch thu / chi (bảng transactions).
- * Thu hay chi được xác định bởi loại của danh mục (category.type).
+ * Giao dịch thu hoặc chi của gia đình (bảng transactions).
+ * Số tiền luôn dương, thu hay chi được xác định bởi loại của danh mục.
  */
 @Entity
-@Table(name = "transactions")
+@Table(
+    name = "transactions",
+    indexes = {
+            @Index(name = "idx_transaction_family_date", columnList = "family_id, transaction_date"),
+            @Index(name = "idx_transaction_family_category_date", columnList = "family_id, category_id, transaction_date")
+    }
+)
 @Getter
 @Setter
 @Builder
@@ -37,12 +35,17 @@ public class Transaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** Chủ sở hữu giao dịch. */
+    /** Gia đình sở hữu giao dịch. */
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "family_id", nullable = false)
+    private Family family;
+
+    /** Người ghi nhận giao dịch (vẫn giữ lại khi người này rời gia đình). */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    /** Danh mục phải thuộc cùng người dùng (cơ sở dữ liệu cũng kiểm tra điều này). */
+    /** Danh mục hệ thống hoặc danh mục của cùng gia đình, phải đang hoạt động khi tạo mới. */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
@@ -54,7 +57,7 @@ public class Transaction {
     @Column(name = "transaction_date", nullable = false)
     private LocalDate transactionDate;
 
-    @Column(name = "description", columnDefinition = "TEXT")
+    @Column(name = "description", length = 255)
     private String description;
 
     @CreationTimestamp
@@ -65,4 +68,3 @@ public class Transaction {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 }
-
